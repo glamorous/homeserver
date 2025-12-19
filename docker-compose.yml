@@ -1,0 +1,71 @@
+version: '3'
+services:
+    heimdall:
+        image: linuxserver/heimdall:latest
+        container_name: heimdall
+        restart: unless-stopped
+        ports:
+            - "${HEIMDALL_PORT_HTTP}:80"
+            - "${HEIMDALL_PORT_HTTPS}:443"
+        volumes:
+            - ${BASE_DIR}/heimdall/config:/config
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+    pihole:
+        image: pihole/pihole:latest
+        container_name: pihole
+        restart: unless-stopped
+        ports:
+            - "53:53/tcp"
+            - "53:53/udp"
+            - "${PIHOLE_PORT_HTTP}:80"
+            - "${PIHOLE_PORT_HTTPS}:443"
+        environment:
+            - TZ=${TZ}
+            - FTLCONF_webserver_api_password:${PIHOLE_ADMIN_PASSWORD}
+            - FTLCONF_dns_listeningMode:all
+        volumes:
+            - ${BASE_DIR}/pihole/etc/pihole:/etc/pihole
+            - ${BASE_DIR}/pihole/etc/dnsmasq.d:/etc/dnsmasq.d
+        dns:
+            - 1.1.1.2
+            - 1.1.1.1
+        cap_add:
+            - SYS_NICE
+            - SYS_TIME
+    node-red:
+        image: nodered/node-red:latest
+        container_name: node-red
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+        ports:
+            - "${NODE_RED_PORT}:1880"
+        volumes:
+            - ${BASE_DIR}/node-red/data:/data
+    influxdb:
+        image: influxdb:latest
+        container_name: influxdb
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+        ports:
+            - "${INFLUXDB_PORT}:8086"
+        volumes:
+            - ${BASE_DIR}/influxdb/var/lib/influxdb2:/var/lib/influxdb2
+    duckdns:
+        image: lscr.io/linuxserver/duckdns:latest
+        container_name: duckdns
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+            - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+            - TOKEN=${DUCKDNS_TOKEN}
+            - UPDATE_IP=ipv4
+            - LOG_FILE=false
+        volumes:
+            - ${BASE_DIR}/duckdns/config:/config
+        restart: unless-stopped
