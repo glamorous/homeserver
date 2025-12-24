@@ -7,6 +7,7 @@ Included services:
 - [InfluxDB](https://www.influxdata.com): Database that stores and queries any type of time series data
 - [Node-RED](https://nodered.org): Browser-based flow editing
 - [DuckDNS](https://www.duckdns.org): free service which will point a DNS (sub domains of duckdns.org) to an IP of your choice
+- [Syncting](https://syncthing.net): Syncthing is a continuous file synchronization program. It synchronizes files between two or more computers in real time, safely protected from prying eyes.
 
 ## Prerequisites
 
