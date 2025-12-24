@@ -69,18 +69,16 @@ services:
         volumes:
             - ${BASE_DIR}/duckdns/config:/config
         restart: unless-stopped
-    syncthing:
-        image: lscr.io/linuxserver/syncthing:latest
-        container_name: syncthing
-        environment:
-            - PUID=${PUID}
-            - PGID=${PGID}
-            - TZ=${TZ}
-        volumes:
-            - ${BASE_DIR}/syncthing/config:/config
+    luckybackup:
+        image: ich777/luckybackup
+        container_name: luckybackup
         ports:
-            - ${SYNCTING_PORT_WEB}:8384
-            - 22000:22000/tcp
-            - 22000:22000/udp
-            - 21027:21027/udp
-        restart: unless-stopped
+            - "${LUCKY_BACKUP_PORT}:5800"
+        volumes:
+            - ${BASE_DIR}/lucky-backup/config:/config:rw
+            - ${LUCKY_BACKUP_SOURCE}:/mnt/source:ro
+            - ${LUCKY_BACKUP_TARGET}:/mnt/target:rw
+        environment:
+            - USER_ID=${PUID}
+            - GROUP_ID=${PGID}
+            - TZ=${TZ}
