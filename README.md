@@ -8,6 +8,8 @@ Included services:
 - [Node-RED](https://nodered.org): Browser-based flow editing
 - [DuckDNS](https://www.duckdns.org): free service which will point a DNS (sub domains of duckdns.org) to an IP of your choice
 - [Diun](https://crazymax.dev/diun): To receive notifications when a Docker image is updated on a Docker registry.
+- [Ofelia](https://hub.docker.com/r/mcuadros/ofelia): A docker job scheduler (aka. crontab for docker)
+- [Rclone](https://hub.docker.com/r/rclone/rclone): Syncs files and directories to and from different cloud storage providers.
 
 ## Prerequisites
 

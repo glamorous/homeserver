@@ -1,5 +1,23 @@
 version: '3'
 services:
+    ofelia:
+        image: mcuadros/ofelia:latest
+        container_name: ofelia
+        command: daemon --docker
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock:ro
+        labels:
+            ofelia.job-run.rclone-backup.schedule: "${RCLONE_SCHEDULER}"
+            ofelia.job-run.rclone-backup.container: "rclone_worker_backup"
+            ofelia.job-run.rclone-backup.command: "sync /data/source /data/target -v"
+    rclone-backup-job:
+        image: rclone/rclone:latest
+        container_name: rclone_worker_backup
+        user: "${PUID}:${PGID}"
+        volumes:
+            - ${RCLONE_SOURCE}:/data/source:ro
+            - ${RCLONE_TARGET}:/data/target
+        restart: "no"
     heimdall:
         image: linuxserver/heimdall:latest
         container_name: heimdall
