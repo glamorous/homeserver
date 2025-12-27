@@ -68,4 +68,21 @@ services:
             - LOG_FILE=false
         volumes:
             - ${BASE_DIR}/duckdns/config:/config
+    diun:
+        image: crazymax/diun:latest
+        container_name: diun
         restart: unless-stopped
+        command: serve
+        environment:
+            - TZ=${TZ}
+            - DIUN_WATCH_WORKERS=20
+            - DIUN_WATCH_SCHEDULE=${DIUN_SCHEDULER}
+            - DIUN_WATCH_JITTER=30s
+            - DIUN_PROVIDERS_DOCKER=true
+            - DIUN_NOTIF_TELEGRAM_TOKEN=${DIUN_TELEGRAM_TOKEN}
+            - DIUN_NOTIF_TELEGRAM_CHATIDS=${DIUN_TELEGRAM_CHATID}
+        volumes:
+            - ${BASE_DIR}/diun/data:/data"
+            - /var/run/docker.sock:/var/run/docker.sock
+        labels:
+            - "diun.enable=true"

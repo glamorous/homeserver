@@ -7,6 +7,7 @@ Included services:
 - [InfluxDB](https://www.influxdata.com): Database that stores and queries any type of time series data
 - [Node-RED](https://nodered.org): Browser-based flow editing
 - [DuckDNS](https://www.duckdns.org): free service which will point a DNS (sub domains of duckdns.org) to an IP of your choice
+- [Diun](https://crazymax.dev/diun): To receive notifications when a Docker image is updated on a Docker registry.
 
 ## Prerequisites
 
