@@ -69,16 +69,3 @@ services:
         volumes:
             - ${BASE_DIR}/duckdns/config:/config
         restart: unless-stopped
-    luckybackup:
-        image: ich777/luckybackup
-        container_name: luckybackup
-        ports:
-            - "${LUCKY_BACKUP_PORT}:5800"
-        volumes:
-            - ${BASE_DIR}/lucky-backup/config:/config:rw
-            - ${LUCKY_BACKUP_SOURCE}:/mnt/source:ro
-            - ${LUCKY_BACKUP_TARGET}:/mnt/target:rw
-        environment:
-            - USER_ID=${PUID}
-            - GROUP_ID=${PGID}
-            - TZ=${TZ}
