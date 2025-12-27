@@ -10,6 +10,7 @@ services:
             ofelia.job-run.rclone-backup.schedule: "${RCLONE_SCHEDULER}"
             ofelia.job-run.rclone-backup.container: "rclone_worker_backup"
             ofelia.job-run.rclone-backup.command: "sync /data/source /data/target -v"
+            ofelia.job-run.rclone-backup.no-overlap: "true"
     rclone-backup-job:
         image: rclone/rclone:latest
         container_name: rclone_worker_backup
