@@ -93,3 +93,18 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
         labels:
             - "diun.enable=true"
+    nginx-proxy-manager:
+        image: 'jc21/nginx-proxy-manager:latest'
+        container_name: nginx-proxy-manager
+        restart: unless-stopped
+        ports:
+            - "${NGINX_PROXY_MANAGER_PORT_HTTP}:80"
+            - "${NGINX_PROXY_MANAGER_PORT_ADMIN}:81"
+            - "${NGINX_PROXY_MANAGER_PORT_HTTPS}:443"
+        volumes:
+            - ${BASE_DIR}/nginx-proxy-manager/data:/data
+            - ${BASE_DIR}/nginx-proxy-manager/etc/letsencrypt:/etc/letsencrypt
+        healthcheck:
+            test: [ "CMD", "/usr/bin/check-health" ]
+            interval: 10s
+            timeout: 3s
