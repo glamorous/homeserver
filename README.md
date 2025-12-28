@@ -9,7 +9,6 @@ Included services:
 - [DuckDNS](https://www.duckdns.org): free service which will point a DNS (sub domains of duckdns.org) to an IP of your choice
 - [Diun](https://crazymax.dev/diun): To receive notifications when a Docker image is updated on a Docker registry.
 - [Ofelia](https://hub.docker.com/r/mcuadros/ofelia): A docker job scheduler (aka. crontab for docker)
-- [Rsync](https://hub.docker.com/r/instrumentisto/rsync-ssh): Rsync to backup source folder to a specified target.
 
 ## Prerequisites
 
