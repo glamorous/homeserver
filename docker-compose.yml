@@ -6,19 +6,18 @@ services:
         command: daemon --docker
         volumes:
             - /var/run/docker.sock:/var/run/docker.sock:ro
-        labels:
-            ofelia.job-run.rclone-backup.schedule: "${RCLONE_SCHEDULER}"
-            ofelia.job-run.rclone-backup.container: "rclone_worker_backup"
-            ofelia.job-run.rclone-backup.command: "sync /data/source /data/target -v"
-            ofelia.job-run.rclone-backup.no-overlap: "true"
-    rclone-backup-job:
-        image: rclone/rclone:latest
-        container_name: rclone_worker_backup
-        user: "${PUID}:${PGID}"
+    rsync-backup-job:
+        image: instrumentisto/rsync-ssh:latest
+        container_name: rsync_worker_backup
+        restart: "unless-stopped"
+        entrypoint: ["tail", "-f", "/dev/null"]
         volumes:
-            - ${RCLONE_SOURCE}:/data/source:ro
-            - ${RCLONE_TARGET}:/data/target
-        restart: "no"
+            - ${BACKUP_SOURCE}:/data/source:ro
+            - ${BACKUP_TARGET}:/data/target
+        labels:
+            ofelia.enabled: "true"
+            ofelia.job-exec.sync-folders.schedule: ${BACKUP_SCHEDULER}
+            ofelia.job-exec.sync-folders.command: "rsync -av --delete --no-perms --no-owner --no-group /data/source/ /data/target/"
     heimdall:
         image: linuxserver/heimdall:latest
         container_name: heimdall
