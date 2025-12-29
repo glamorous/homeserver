@@ -108,3 +108,12 @@ services:
             test: [ "CMD", "/usr/bin/check-health" ]
             interval: 10s
             timeout: 3s
+    uptime-kuma:
+        image: louislam/uptime-kuma:2
+        container_name: uptime-kuma
+        restart: unless-stopped
+        volumes:
+            - ${BASE_DIR}/uptime-kuma/app/data:/app/data
+            - /var/run/docker.sock:/var/run/docker.sock
+        ports:
+            - "${UPTIME_KUMA_PORT}:3001"
