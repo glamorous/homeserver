@@ -117,3 +117,26 @@ services:
             - /var/run/docker.sock:/var/run/docker.sock
         ports:
             - "${UPTIME_KUMA_PORT}:3001"
+    speedtest-tracker:
+        image: lscr.io/linuxserver/speedtest-tracker:latest
+        container_name: speedtest-tracker
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+            - APP_KEY=${SPEEDTEST_TRACKER_APP_KEY}
+            - ADMIN_NAME=admin
+            - ADMIN_EMAIL=${ADMIN_EMAIL}
+            - ADMIN_PASSWORD=${SPEEDTEST_TRACKER_PASSWORD}
+            - APP_URL=${SPEEDTEST_TRACKER_URL}
+            - DB_CONNECTION=sqlite
+            - SPEEDTEST_SCHEDULE=${SPEEDTEST_TRACKER_SCHEDULE}
+            - SPEEDTEST_SERVERS=
+            - DISPLAY_TIMEZONE=${TZ}
+            - PRUNE_RESULTS_OLDER_THAN=0 #optional
+        volumes:
+            - ${BASE_DIR}/speedtest-tracker/config:/config
+        ports:
+            - "${SPEEDTEST_TRACKER_PORT_HTTP}:80"
+            - "${SPEEDTEST_TRACKER_PORT_HTTPS}:443"
+        restart: unless-stopped
