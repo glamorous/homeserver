@@ -97,6 +97,9 @@ services:
         image: 'jc21/nginx-proxy-manager:latest'
         container_name: nginx-proxy-manager
         restart: unless-stopped
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
         ports:
             - "${NGINX_PROXY_MANAGER_PORT_HTTP}:80"
             - "${NGINX_PROXY_MANAGER_PORT_ADMIN}:81"
@@ -131,9 +134,8 @@ services:
             - APP_URL=${SPEEDTEST_TRACKER_URL}
             - DB_CONNECTION=sqlite
             - SPEEDTEST_SCHEDULE=${SPEEDTEST_TRACKER_SCHEDULE}
-            - SPEEDTEST_SERVERS=
+            - SPEEDTEST_SERVERS=${SPEEDTEST_TRACKER_SERVERS}
             - DISPLAY_TIMEZONE=${TZ}
-            - PRUNE_RESULTS_OLDER_THAN=0 #optional
         volumes:
             - ${BASE_DIR}/speedtest-tracker/config:/config
         ports:
