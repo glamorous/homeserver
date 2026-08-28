@@ -1,0 +1,46 @@
+services:
+    pihole:
+        image: pihole/pihole:latest
+        container_name: pihole
+        restart: unless-stopped
+        ports:
+            - "53:53/tcp"
+            - "53:53/udp"
+            - "${PIHOLE_PORT_HTTP}:80"
+            - "${PIHOLE_PORT_HTTPS}:443"
+        environment:
+            - TZ=${TZ}
+            - FTLCONF_webserver_api_password=${PIHOLE_ADMIN_PASSWORD}
+            - FTLCONF_dns_listeningMode=${PIHOLE_LISTENING_MODE:-single}
+        volumes:
+            - ${BASE_DIR}/pihole/etc/pihole:/etc/pihole
+            - ${BASE_DIR}/pihole/etc/dnsmasq.d:/etc/dnsmasq.d
+        dns:
+            - 1.1.1.2
+            - 1.1.1.1
+        cap_add:
+            - SYS_NICE
+            - SYS_TIME
+        networks:
+            - homeserver
+
+    duckdns:
+        image: lscr.io/linuxserver/duckdns:latest
+        container_name: duckdns
+        restart: unless-stopped
+        environment:
+            - PUID=${PUID}
+            - PGID=${PGID}
+            - TZ=${TZ}
+            - SUBDOMAINS=${DUCKDNS_SUBDOMAINS}
+            - TOKEN=${DUCKDNS_TOKEN}
+            - UPDATE_IP=ipv4
+            - LOG_FILE=false
+        volumes:
+            - ${BASE_DIR}/duckdns/config:/config
+        networks:
+            - homeserver
+
+networks:
+    homeserver:
+        external: true
