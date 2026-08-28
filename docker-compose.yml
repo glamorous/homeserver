@@ -45,16 +45,6 @@ services:
             - "${NODE_RED_PORT}:1880"
         volumes:
             - ${BASE_DIR}/node-red/data:/data
-    influxdb:
-        image: influxdb:latest
-        container_name: influxdb
-        restart: unless-stopped
-        environment:
-            - TZ=${TZ}
-        ports:
-            - "${INFLUXDB_PORT}:8086"
-        volumes:
-            - ${BASE_DIR}/influxdb/var/lib/influxdb2:/var/lib/influxdb2
     duckdns:
         image: lscr.io/linuxserver/duckdns:latest
         container_name: duckdns

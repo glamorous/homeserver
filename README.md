@@ -4,7 +4,6 @@ Docker compose repo for home server with a couple of handy services.
 Included services:
 - [Heimdall](https://github.com/linuxserver/Heimdall): Application dashboard and launcher
 - [Pi-hole](https://pi-hole.net): A black hole for Internet advertisements
-- [InfluxDB](https://www.influxdata.com): Database that stores and queries any type of time series data
 - [Node-RED](https://nodered.org): Browser-based flow editing
 - [DuckDNS](https://www.duckdns.org): free service which will point a DNS (sub domains of duckdns.org) to an IP of your choice
 - [Diun](https://crazymax.dev/diun): To receive notifications when a Docker image is updated on a Docker registry.
