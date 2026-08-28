@@ -89,7 +89,7 @@ services:
             - DIUN_NOTIF_TELEGRAM_TOKEN=${DIUN_TELEGRAM_TOKEN}
             - DIUN_NOTIF_TELEGRAM_CHATIDS=${DIUN_TELEGRAM_CHATID}
         volumes:
-            - ${BASE_DIR}/diun/data:/data"
+            - ${BASE_DIR}/diun/data:/data
             - /var/run/docker.sock:/var/run/docker.sock
         labels:
             - "diun.enable=true"
