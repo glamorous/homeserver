@@ -1,8 +1,10 @@
 monitoring
 ==========
 
-Uptime Kuma for availability checks, Speedtest Tracker for throughput history,
-and Diun for notifications when a newer container image is published.
+[Uptime Kuma](https://uptime.kuma.pet) for availability checks,
+[Speedtest Tracker](https://docs.speedtest-tracker.dev) for throughput history,
+and [Diun](https://crazymax.dev/diun) for notifications when a newer container
+image is published.
 
 Run this on more than one host, so each instance can watch the other. A monitor
 that dies together with the thing it monitors reports nothing.

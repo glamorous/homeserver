@@ -1,7 +1,12 @@
 ai
 ==
 
-Open WebUI: a browser chat interface for a model server running on the host.
+[Open WebUI](https://docs.openwebui.com): a browser chat interface for a model
+server running on the host.
+
+The model server is [Ollama](https://ollama.com). Installation instructions per
+platform are in [hosts/macos.md](../../hosts/macos.md) and
+[hosts/raspberry.md](../../hosts/raspberry.md).
 
 ## The model server is not in this stack
 

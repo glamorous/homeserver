@@ -12,12 +12,12 @@ deploys the stacks it needs and ignores the rest.
 
 | Stack | Services | Purpose |
 |---|---|---|
-| `proxy` | Nginx Proxy Manager | Reverse proxy and TLS certificates |
-| `tunnel` | cloudflared | Outbound tunnel for external access |
-| `dns` | Pi-hole, DuckDNS | Network-wide DNS filtering and dynamic DNS |
-| `apps` | Heimdall, Node-RED, InfluxDB | Dashboard, flow automation, time series storage |
-| `monitoring` | Uptime Kuma, Speedtest Tracker, Diun | Availability, throughput and image update alerts |
-| `ai` | Open WebUI | Chat interface for a locally running model |
+| `proxy` | [Nginx Proxy Manager](https://nginxproxymanager.com) | Reverse proxy and TLS certificates |
+| `tunnel` | [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) | Outbound tunnel for external access |
+| `dns` | [Pi-hole](https://pi-hole.net), [DuckDNS](https://www.duckdns.org) | Network-wide DNS filtering and dynamic DNS |
+| `apps` | [Heimdall](https://github.com/linuxserver/Heimdall), [Node-RED](https://nodered.org), [InfluxDB](https://www.influxdata.com) | Dashboard, flow automation, time series storage |
+| `monitoring` | [Uptime Kuma](https://uptime.kuma.pet), [Speedtest Tracker](https://docs.speedtest-tracker.dev), [Diun](https://crazymax.dev/diun) | Availability, throughput and image update alerts |
+| `ai` | [Open WebUI](https://docs.openwebui.com) | Chat interface for a locally running model |
 
 ## Deployment roles
 
@@ -34,6 +34,25 @@ Not every host runs every stack. A typical two-host setup:
 
 Running `dns` and `monitoring` on both hosts is deliberate: two resolvers survive
 one host going down, and two monitoring instances can watch each other.
+
+## One Portainer, many hosts
+
+Every stack on every host is managed from a single [Portainer](https://www.portainer.io)
+instance. Only one host runs Portainer itself; the others run nothing but its
+agent and are added there as extra environments.
+
+| Role | Runs | Manages |
+|---|---|---|
+| Primary | Portainer server | Its own stacks and those of every secondary |
+| Secondary | Portainer agent only | Nothing locally; it is driven from the primary |
+
+A secondary host therefore needs no Portainer login, no repository clone and no
+manual Compose commands. You add its environment once, then deploy stacks to it
+from the same interface as everything else. The platform guides cover both
+roles.
+
+Pick the most reliable machine as primary: when it is down you cannot deploy
+anywhere, although already running containers keep going untouched.
 
 ## Prerequisites
 

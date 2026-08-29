@@ -4,6 +4,9 @@ Running on a Raspberry
 Written for a Debian-based OS on a Raspberry board. Other single-board
 computers work the same way; only the boot configuration paths differ.
 
+This is normally a secondary host: it runs the Portainer agent and is managed
+entirely from the primary. See step 7.
+
 ## 1. Install the operating system
 
 Install a Lite image on the SD card or SSD with the Raspberry Pi Imager.
@@ -66,20 +69,24 @@ Then replace and lock the resolver configuration:
 
 ## 7. Connect to Portainer
 
-This host is managed from the Portainer instance on another machine. Install
-only the agent here, then add the environment in Portainer:
+A board like this is normally a secondary host: it runs the
+[Portainer](https://www.portainer.io) agent and nothing else, and every stack on
+it is deployed from the primary. You never log in to Portainer here, never clone
+this repository here, and never run Compose by hand here.
 
     docker run -d -p 9001:9001 --name portainer_agent --restart=always \
       -v /var/run/docker.sock:/var/run/docker.sock \
       -v /var/lib/docker/volumes:/var/lib/docker/volumes \
       portainer/agent:latest
 
-## 8. Data directory
+Then, on the primary host: Environments -> Add environment -> Docker Standalone
+-> Agent, and enter `<this-host>:9001`. Keep the agent version equal to the
+Portainer server version; a mismatch shows up as unexplained API errors.
 
-Create the directory you will use as `BASE_DIR`, for example `/docker-data`,
-and make sure your user owns it.
+From that point on the host appears as an environment, and deploying a stack to
+it is the same procedure as for any other environment.
 
-## Shared network
+## 8. Shared network
 
 Every stack attaches to one external Docker network. Create it once, before
 deploying the first stack:
@@ -87,3 +94,39 @@ deploying the first stack:
     docker network create homeserver
 
 Nothing creates this for you; deploying a stack without it fails.
+
+## 9. Data directory
+
+Create the directory you will use as `BASE_DIR`, for example `/docker-data`,
+and make sure your user owns it.
+
+## Locally running models
+
+Only relevant if this host runs the `ai` stack. Install
+[Ollama](https://ollama.com) natively, not in a container:
+
+    curl -fsSL https://ollama.com/install.sh | sh
+
+The installer sets up a systemd service. To let containers and other machines
+reach it, override the bind address:
+
+    sudo systemctl edit ollama
+
+Add:
+
+    [Service]
+    Environment="OLLAMA_HOST=0.0.0.0:11434"
+
+Then reload and verify:
+
+    sudo systemctl daemon-reload && sudo systemctl restart ollama
+    curl http://localhost:11434/api/tags
+
+**Be realistic about the hardware.** A single-board computer has no usable GPU
+and limited memory, so inference falls back to the CPU. Models of a few billion
+parameters will run, slowly; anything larger will not fit. Run the `ai` stack on
+a machine with real memory and point `OLLAMA_BASE_URL` at that instead.
+
+Note that the API has no authentication whatsoever: binding to `0.0.0.0` exposes
+model management to everyone who can reach the port. Keep it on the local
+network.

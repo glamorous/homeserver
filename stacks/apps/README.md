@@ -1,8 +1,12 @@
 apps
 ====
 
-Heimdall as a dashboard, Node-RED for flow automation, and InfluxDB for time
-series storage.
+[Heimdall](https://github.com/linuxserver/Heimdall) as a dashboard,
+[Node-RED](https://nodered.org) for flow automation, and
+[InfluxDB](https://www.influxdata.com) for time series storage.
+
+Documentation: [Heimdall](https://docs.linuxserver.io/images/docker-heimdall/),
+[Node-RED](https://nodered.org/docs/), [InfluxDB v2](https://docs.influxdata.com/influxdb/v2/).
 
 Each service keeps its own state under `${BASE_DIR}`, so the same stack can run
 on several hosts with entirely different contents.

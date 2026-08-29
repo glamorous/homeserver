@@ -1,8 +1,12 @@
 dns
 ===
 
-Pi-hole for network-wide DNS filtering, and DuckDNS to keep a hostname pointed
-at a changing public IP address.
+[Pi-hole](https://pi-hole.net) for network-wide DNS filtering, and
+[DuckDNS](https://www.duckdns.org) to keep a hostname pointed at a changing
+public IP address.
+
+Configuration reference: [Pi-hole v6 settings](https://docs.pi-hole.net/main/post-install/).
+Synchronising several instances: [nebula-sync](https://github.com/lovelaze/nebula-sync).
 
 Run this on more than one host. Two resolvers mean a single host going down
 degrades resolution instead of breaking it.

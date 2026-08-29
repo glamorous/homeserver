@@ -1,7 +1,7 @@
 proxy
 =====
 
-Nginx Proxy Manager: reverse proxy with a web UI, handling TLS certificates for
+[Nginx Proxy Manager](https://nginxproxymanager.com): reverse proxy with a web UI, handling TLS certificates for
 the services you expose under your own hostnames.
 
 Deploy this on the host that owns your inbound traffic, and on that host only.

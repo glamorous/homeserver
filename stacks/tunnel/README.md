@@ -1,7 +1,7 @@
 tunnel
 ======
 
-cloudflared: an outbound-only tunnel that publishes selected services without
+[cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/): an outbound-only tunnel that publishes selected services without
 opening any inbound port on your router.
 
 ## Setup
