@@ -38,6 +38,12 @@ watched image counts as newly seen and you get one burst of notifications.
 A `:latest` tag does not update by itself. Diun tells you an update exists; you
 still decide when to pull it.
 
+### Say which host reported
+
+Every notification ends with the container's hostname, which by default is the
+container id — a random string that changes whenever the container is
+recreated. Set `HOST_NAME` per host so the message names the machine instead.
+
 ## Health checks
 
 Not every service has one, and that is deliberate. Uptime Kuma, Pi-hole,

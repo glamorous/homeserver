@@ -45,6 +45,9 @@ services:
     diun:
         image: crazymax/diun:latest
         container_name: diun
+        # Diun puts this name in every notification. Without it the container id
+        # is reported, which says nothing and changes on every recreation.
+        hostname: ${HOST_NAME:-homeserver}
         restart: unless-stopped
         command: serve
         environment:
