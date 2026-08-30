@@ -37,3 +37,18 @@ watched image counts as newly seen and you get one burst of notifications.
 
 A `:latest` tag does not update by itself. Diun tells you an update exists; you
 still decide when to pull it.
+
+## Health checks
+
+Not every service has one, and that is deliberate. Uptime Kuma, Pi-hole,
+Node-RED and Open WebUI ship their own. Heimdall, InfluxDB and Speedtest
+Tracker get one here, each hitting an endpoint the image can actually reach —
+all three carry `curl`.
+
+DuckDNS, Diun and cloudflared have none on purpose. The first two have no
+listening service, so the only testable thing is whether the process still
+exists, which proves nothing about whether the DNS record is current or the
+registry was reachable. A green tick that means nothing is worse than none at
+all. The cloudflared image contains no shell, so `CMD-SHELL` and `curl` are
+both unavailable; monitor it from outside instead, by adding
+`--metrics 0.0.0.0:20241` to its command and pointing a check at `/ready`.
