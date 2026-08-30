@@ -23,6 +23,15 @@ Diun only reports; it never updates anything. It reads the local Docker socket,
 so it sees the containers on its own host only — which is why it belongs in a
 stack you deploy everywhere rather than in one central place.
 
+### Watch everything, not just what is labelled
+
+The Docker provider watches nothing by default: without
+`DIUN_PROVIDERS_DOCKER_WATCHBYDEFAULT` it only considers containers carrying
+the label `diun.enable=true`. That fails quietly — Diun starts, reports
+`Found 1 image(s) to analyze`, and you conclude it is working while it is only
+watching itself. With the setting on, every running container is watched and a
+single container can still opt out with `diun.enable=false`.
+
 Its state lives under `${BASE_DIR}`. If that directory is empty on start, every
 watched image counts as newly seen and you get one burst of notifications.
 
