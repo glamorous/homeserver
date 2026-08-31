@@ -43,7 +43,7 @@ services:
             - homeserver
 
     diun:
-        image: crazymax/diun:latest
+        image: crazymax/diun:4
         container_name: diun
         # Diun puts this name in every notification. Without it the container id
         # is reported, which says nothing and changes on every recreation.

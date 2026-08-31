@@ -22,7 +22,7 @@ services:
             - homeserver
 
     node-red:
-        image: nodered/node-red:latest
+        image: nodered/node-red:4.1
         container_name: node-red
         restart: unless-stopped
         environment:
@@ -35,7 +35,7 @@ services:
             - homeserver
 
     influxdb:
-        image: influxdb:latest
+        image: influxdb:2
         container_name: influxdb
         restart: unless-stopped
         environment:
