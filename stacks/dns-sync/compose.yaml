@@ -1,0 +1,19 @@
+services:
+    nebula-sync:
+        image: ghcr.io/lovelaze/nebula-sync:v0.11.2
+        container_name: nebula-sync
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+            - CRON=${NEBULA_SYNC_CRON}
+            - FULL_SYNC=${NEBULA_SYNC_FULL}
+            - RUN_GRAVITY=${NEBULA_SYNC_GRAVITY}
+            - CLIENT_SKIP_TLS_VERIFICATION=${NEBULA_SYNC_SKIP_TLS}
+            - PRIMARY=${NEBULA_SYNC_PRIMARY}
+            - REPLICAS=${NEBULA_SYNC_REPLICAS}
+        networks:
+            - homeserver
+
+networks:
+    homeserver:
+        external: true
