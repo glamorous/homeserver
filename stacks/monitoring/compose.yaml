@@ -3,6 +3,11 @@ services:
         image: louislam/uptime-kuma:2
         container_name: uptime-kuma
         restart: unless-stopped
+        # Lets a check reach a service running natively on the host. A model
+        # server bound to loopback is unreachable from the network on purpose,
+        # so this is the only path that tests what the applications actually use.
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
         ports:
             - "${UPTIME_KUMA_PORT}:3001"
         volumes:

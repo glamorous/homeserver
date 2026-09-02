@@ -11,6 +11,19 @@ services:
             - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
             - WEBUI_AUTH=true
             - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+            # Needed behind a reverse proxy: the callback address is built from
+            # this, not from the request, so without it sign-in returns to the
+            # container's own port and fails.
+            - WEBUI_URL=${OPEN_WEBUI_URL}
+            - OPENID_PROVIDER_URL=${OPEN_WEBUI_OIDC_DISCOVERY}
+            - OAUTH_CLIENT_ID=${OPEN_WEBUI_OAUTH_CLIENT_ID}
+            - OAUTH_CLIENT_SECRET=${OPEN_WEBUI_OAUTH_CLIENT_SECRET}
+            - OAUTH_PROVIDER_NAME=${OPEN_WEBUI_OAUTH_NAME}
+            - OAUTH_SCOPES=openid email profile
+            - ENABLE_OAUTH_SIGNUP=true
+            # Ties a provider login to an existing local account with the same
+            # address, rather than leaving one person with two accounts.
+            - OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
         volumes:
             - ${BASE_DIR}/open-webui/data:/app/backend/data
         networks:
