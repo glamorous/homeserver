@@ -30,12 +30,40 @@ each interface:
 
 ## Addressing
 
-The Pi-hole on the same host is reachable by container name over the shared
-network, which keeps its password off the wire. A Pi-hole on another host needs
-its address and published port.
+Every URL carries an admin password, so how you address a Pi-hole decides
+whether that password crosses a wire.
 
-Note that Pi-hole's own HTTPS port serves a self-signed certificate, so
-`NEBULA_SYNC_SKIP_TLS` has to stay on for any replica reached that way.
+The Pi-hole on the same host is reachable by container name over the shared
+network. That traffic never leaves the machine, so plain HTTP is right for it:
+encrypting it would buy nothing and cost a dependency.
+
+A Pi-hole on another host is different — its password does cross the network,
+so use its HTTPS port. Pi-hole serves its own certificate there, which no CA
+vouches for, so `NEBULA_SYNC_SKIP_TLS` has to be on. That is weaker than a real
+certificate and still far better than sending the password in the clear.
+
+A reverse proxy does not help here. It would sit on the host this runs on, so
+the hop it cannot encrypt is exactly the one that leaves the machine.
+
+## Knowing it still works
+
+A container check is the wrong signal here. This process keeps running on its
+own schedule, so it stays up while every sync fails, and the monitor stays
+green while the spare quietly drifts.
+
+Use the webhooks instead, pointed at a push monitor: an ordinary check asks "did
+it answer", a push monitor asks "did it report in", which is the question that
+matters for something that only acts once an hour. Point both the success and
+failure URL at the same monitor and all three failure modes surface. A failed
+sync marks itself down through `?status=down`. A sync that stopped running, a
+removed container or a dead host produce no ping at all, and the monitor falls
+over once its window passes. Give that window some slack over the interval in
+`CRON`, so a single slow run is not an alert.
+
+Address the monitor over the shared network rather than through a reverse
+proxy. This is the one thing that tells you the rest is broken, so it should
+depend on as little as possible — a proxy or a public name would make the
+alarm rely on the very DNS this stack maintains.
 
 ## Gravity
 

@@ -11,6 +11,8 @@ services:
             - CLIENT_SKIP_TLS_VERIFICATION=${NEBULA_SYNC_SKIP_TLS}
             - PRIMARY=${NEBULA_SYNC_PRIMARY}
             - REPLICAS=${NEBULA_SYNC_REPLICAS}
+            - WEBHOOK_SYNC_SUCCESS_URL=${NEBULA_SYNC_WEBHOOK_OK}
+            - WEBHOOK_SYNC_FAILURE_URL=${NEBULA_SYNC_WEBHOOK_FAIL}
         networks:
             - homeserver
 
