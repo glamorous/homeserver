@@ -19,6 +19,7 @@ deploys the stacks it needs and ignores the rest.
 | `apps` | [Heimdall](https://github.com/linuxserver/Heimdall), [Node-RED](https://nodered.org), [InfluxDB](https://www.influxdata.com) | Dashboard, flow automation, time series storage |
 | `monitoring` | [Uptime Kuma](https://uptime.kuma.pet), [Speedtest Tracker](https://docs.speedtest-tracker.dev), [Diun](https://crazymax.dev/diun) | Availability, throughput and image update alerts |
 | `ai` | [Open WebUI](https://docs.openwebui.com) | Chat interface for a locally running model |
+| `auth` | [authentik](https://goauthentik.io) | One account per person, shared across services |
 
 ## Deployment roles
 
@@ -33,6 +34,7 @@ Not every host runs every stack. A typical two-host setup:
 | `apps` | yes | yes |
 | `monitoring` | yes | yes |
 | `ai` | yes | no |
+| `auth` | yes | no |
 
 Running `dns` and `monitoring` on both hosts is deliberate: two resolvers survive
 one host going down, and two monitoring instances can watch each other.

@@ -1,0 +1,85 @@
+services:
+    authentik-postgresql:
+        image: postgres:16-alpine
+        container_name: authentik-postgresql
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+            - POSTGRES_DB=authentik
+            - POSTGRES_USER=authentik
+            - POSTGRES_PASSWORD=${AUTHENTIK_PG_PASS}
+        volumes:
+            - ${BASE_DIR}/authentik/postgresql:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U authentik -d authentik"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 60s
+        networks:
+            - homeserver
+
+    authentik-redis:
+        image: redis:7-alpine
+        container_name: authentik-redis
+        restart: unless-stopped
+        command: --save 60 1 --loglevel warning
+        volumes:
+            - ${BASE_DIR}/authentik/redis:/data
+        healthcheck:
+            test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+            interval: 30s
+            timeout: 5s
+            retries: 5
+            start_period: 20s
+        networks:
+            - homeserver
+
+    authentik-server:
+        image: ghcr.io/goauthentik/server:2026.8
+        container_name: authentik-server
+        restart: unless-stopped
+        command: server
+        environment: &authentik-env
+            - TZ=${TZ}
+            - AUTHENTIK_SECRET_KEY=${AUTHENTIK_SECRET_KEY}
+            - AUTHENTIK_ERROR_REPORTING__ENABLED=false
+            - AUTHENTIK_POSTGRESQL__HOST=authentik-postgresql
+            - AUTHENTIK_POSTGRESQL__NAME=authentik
+            - AUTHENTIK_POSTGRESQL__USER=authentik
+            - AUTHENTIK_POSTGRESQL__PASSWORD=${AUTHENTIK_PG_PASS}
+            - AUTHENTIK_REDIS__HOST=authentik-redis
+        volumes:
+            - ${BASE_DIR}/authentik/media:/media
+            - ${BASE_DIR}/authentik/custom-templates:/templates
+        ports:
+            - "${AUTHENTIK_PORT_HTTP}:9000"
+        depends_on:
+            authentik-postgresql:
+                condition: service_healthy
+            authentik-redis:
+                condition: service_healthy
+        networks:
+            - homeserver
+
+    authentik-worker:
+        image: ghcr.io/goauthentik/server:2026.8
+        container_name: authentik-worker
+        restart: unless-stopped
+        command: worker
+        environment: *authentik-env
+        volumes:
+            - ${BASE_DIR}/authentik/media:/media
+            - ${BASE_DIR}/authentik/certs:/certs
+            - ${BASE_DIR}/authentik/custom-templates:/templates
+        depends_on:
+            authentik-postgresql:
+                condition: service_healthy
+            authentik-redis:
+                condition: service_healthy
+        networks:
+            - homeserver
+
+networks:
+    homeserver:
+        external: true
