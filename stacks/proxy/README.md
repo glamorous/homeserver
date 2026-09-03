@@ -19,4 +19,4 @@ unrelated.
 
 Because every stack joins the shared `homeserver` network, proxy hosts can point
 at a container name and its internal port rather than a host IP, for example
-`heimdall:80`. That keeps working when host ports change.
+`uptime-kuma:3001`. That keeps working when host ports change.

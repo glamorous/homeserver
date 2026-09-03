@@ -29,6 +29,18 @@ password to anyway.
 The difference matters for a household. Behind forward auth, a family member is
 not a user of that service — they are simply past its door.
 
+## The dashboard is the launcher
+
+Every application registered here carries a launch URL, and the provider shows
+each person only the ones their group allows. That is a dashboard already, and
+one filtered by who is looking — which a separate dashboard listing everything
+to everyone cannot be. Applications that need no gate at all can be registered
+as a tile with only a launch URL and no provider.
+
+Point the bare domain at this stack so old bookmarks land on it. Note what that
+implies: an administrator who belongs to no group sees an empty launcher, which
+is correct and still surprising the first time.
+
 ## Forward authentication behind Nginx Proxy Manager
 
 Per protected host, in the Advanced tab. Three details are not interchangeable

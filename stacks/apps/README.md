@@ -1,12 +1,16 @@
 apps
 ====
 
-[Heimdall](https://github.com/linuxserver/Heimdall) as a dashboard,
-[Node-RED](https://nodered.org) for flow automation, and
+[Node-RED](https://nodered.org) for flow automation and
 [InfluxDB](https://www.influxdata.com) for time series storage.
 
-Documentation: [Heimdall](https://docs.linuxserver.io/images/docker-heimdall/),
-[Node-RED](https://nodered.org/docs/), [InfluxDB v2](https://docs.influxdata.com/influxdb/v2/).
+Documentation: [Node-RED](https://nodered.org/docs/),
+[InfluxDB v2](https://docs.influxdata.com/influxdb/v2/).
+
+A dashboard used to live here. The identity provider lists the applications a
+person is allowed to open, which is the same thing filtered by who is looking,
+so a separate dashboard that shows everything to everyone had nothing left to
+add. See [../auth/README.md](../auth/README.md).
 
 Each service keeps its own state under `${BASE_DIR}`, so the same stack can run
 on several hosts with entirely different contents.

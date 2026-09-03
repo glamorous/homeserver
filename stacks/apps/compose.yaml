@@ -1,26 +1,4 @@
 services:
-    heimdall:
-        image: linuxserver/heimdall:latest
-        container_name: heimdall
-        restart: unless-stopped
-        ports:
-            - "${HEIMDALL_PORT_HTTP}:80"
-            - "${HEIMDALL_PORT_HTTPS}:443"
-        volumes:
-            - ${BASE_DIR}/heimdall/config:/config
-        environment:
-            - PUID=${PUID}
-            - PGID=${PGID}
-            - TZ=${TZ}
-        healthcheck:
-            test: ["CMD-SHELL", "curl -fsS -o /dev/null http://localhost:80/ || exit 1"]
-            interval: 30s
-            timeout: 5s
-            retries: 3
-            start_period: 30s
-        networks:
-            - homeserver
-
     node-red:
         image: nodered/node-red:4.1
         container_name: node-red

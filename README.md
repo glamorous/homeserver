@@ -16,7 +16,7 @@ deploys the stacks it needs and ignores the rest.
 | `tunnel` | [cloudflared](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/) | Outbound tunnel for external access |
 | `dns` | [Pi-hole](https://pi-hole.net), [DuckDNS](https://www.duckdns.org) | Network-wide DNS filtering and dynamic DNS |
 | `dns-sync` | [nebula-sync](https://github.com/lovelaze/nebula-sync) | Copy one resolver's configuration to the others |
-| `apps` | [Heimdall](https://github.com/linuxserver/Heimdall), [Node-RED](https://nodered.org), [InfluxDB](https://www.influxdata.com) | Dashboard, flow automation, time series storage |
+| `apps` | [Node-RED](https://nodered.org), [InfluxDB](https://www.influxdata.com) | Flow automation and time series storage |
 | `monitoring` | [Uptime Kuma](https://uptime.kuma.pet), [Speedtest Tracker](https://docs.speedtest-tracker.dev), [Diun](https://crazymax.dev/diun) | Availability, throughput and image update alerts |
 | `ai` | [Open WebUI](https://docs.openwebui.com) | Chat interface for a locally running model |
 | `auth` | [authentik](https://goauthentik.io) | One account per person, shared across services |

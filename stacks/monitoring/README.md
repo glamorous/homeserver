@@ -47,9 +47,9 @@ recreated. Set `HOST_NAME` per host so the message names the machine instead.
 ## Health checks
 
 Not every service has one, and that is deliberate. Uptime Kuma, Pi-hole,
-Node-RED and Open WebUI ship their own. Heimdall, InfluxDB and Speedtest
-Tracker get one here, each hitting an endpoint the image can actually reach —
-all three carry `curl`.
+Node-RED and Open WebUI ship their own. InfluxDB and Speedtest Tracker get one
+here, each hitting an endpoint the image can actually reach — both carry
+`curl`.
 
 DuckDNS, Diun and cloudflared have none on purpose. The first two have no
 listening service, so the only testable thing is whether the process still
