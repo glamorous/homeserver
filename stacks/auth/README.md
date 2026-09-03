@@ -29,6 +29,59 @@ password to anyway.
 The difference matters for a household. Behind forward auth, a family member is
 not a user of that service — they are simply past its door.
 
+## Forward authentication behind Nginx Proxy Manager
+
+Per protected host, in the Advanced tab. Three details are not interchangeable
+with what a generic guide will tell you:
+
+    proxy_buffers 8 16k;
+    proxy_buffer_size 32k;
+    set $ak_http_host $http_host;
+    if ($ak_http_host = "") {
+        set $ak_http_host $host;
+    }
+
+    location /outpost.goauthentik.io {
+        proxy_pass              http://<host-ip>:<authentik-port>/outpost.goauthentik.io;
+        proxy_set_header        Host $ak_http_host;
+        proxy_set_header        X-Original-URL $scheme://$http_host$request_uri;
+        add_header              Set-Cookie $auth_cookie;
+        auth_request_set        $auth_cookie $upstream_http_set_cookie;
+        proxy_pass_request_body off;
+        proxy_set_header        Content-Length "";
+    }
+
+    location @goauthentik_proxy_signin {
+        internal;
+        add_header Set-Cookie $auth_cookie;
+        return 302 /outpost.goauthentik.io/start?rd=$request_uri;
+    }
+
+    auth_request     /outpost.goauthentik.io/auth/nginx;
+    error_page       401 = @goauthentik_proxy_signin;
+    auth_request_set $auth_cookie $upstream_http_set_cookie;
+    add_header       Set-Cookie $auth_cookie;
+    auth_request_set $authentik_username $upstream_http_x_authentik_username;
+    proxy_set_header X-authentik-username $authentik_username;
+
+**No `location /`.** Nginx Proxy Manager generates one; a second refuses to
+load. The `auth_request` directives sit at server level and are inherited.
+
+**Address the outpost by IP, not by container name.** Nginx resolves a name in
+`proxy_pass` when it loads its configuration, so a name makes the whole proxy
+refuse to reload whenever this stack happens to be down — taking every
+unrelated site with it.
+
+**Use single-application providers, not domain level.** Domain level means one
+application and therefore one access policy for every host under the domain,
+which makes it impossible to admit the household to one service and not
+another. People still sign in once: the session is shared, so the second host
+lets them through silently.
+
+Check before enabling it on a host that nothing machine-driven uses that
+hostname. Forward authentication answers an API client with a redirect to a
+login page, which it cannot follow.
+
 ## Keep a local administrator everywhere
 
 Every service that gets an identity provider should keep one local account that
