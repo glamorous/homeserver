@@ -1,0 +1,18 @@
+services:
+    restic-rest:
+        image: restic/rest-server:0.14.0
+        container_name: restic-rest
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+            - OPTIONS=${RESTIC_REST_OPTIONS}
+        volumes:
+            - ${BASE_DIR}/backup/repo:/data
+        ports:
+            - "${RESTIC_REST_PORT}:8000"
+        networks:
+            - homeserver
+
+networks:
+    homeserver:
+        external: true

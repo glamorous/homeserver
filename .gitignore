@@ -1,0 +1,6 @@
+# A global ignore file may carry a `Backup*/` rule from Visual Studio
+# boilerplate. Git matches paths case-insensitively on macOS, so that rule
+# silently swallows the two backup stacks: `git add` reports nothing, `git
+# status` shows nothing, and the commit lands without them.
+!stacks/backup/
+!stacks/backup-store/

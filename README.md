@@ -20,6 +20,8 @@ deploys the stacks it needs and ignores the rest.
 | `monitoring` | [Uptime Kuma](https://uptime.kuma.pet), [Speedtest Tracker](https://docs.speedtest-tracker.dev), [Diun](https://crazymax.dev/diun) | Availability, throughput and image update alerts |
 | `ai` | [Open WebUI](https://docs.openwebui.com) | Chat interface for a locally running model |
 | `auth` | [authentik](https://goauthentik.io) | One account per person, shared across services |
+| `backup` | [restic](https://restic.net) | Snapshots this host's data into the shared repository |
+| `backup-store` | [rest-server](https://github.com/restic/rest-server) | Holds the repository the others write to |
 
 ## Deployment roles
 
@@ -35,13 +37,16 @@ Not every host runs every stack. A typical two-host setup:
 | `monitoring` | yes | yes |
 | `ai` | yes | no |
 | `auth` | yes | no |
+| `backup` | yes | yes |
+| `backup-store` | yes | no |
 
 Running `dns` and `monitoring` on both hosts is deliberate: two resolvers survive
 one host going down, and two monitoring instances can watch each other.
 
 `dns-sync` is the opposite: exactly one host runs it, whichever holds the
 configuration you maintain. It writes to the other resolvers, so a second
-instance would either duplicate that work or undo it.
+instance would either duplicate that work or undo it. `backup-store` is the same
+shape: every host makes snapshots, one host keeps them.
 
 ## One Portainer, many hosts
 

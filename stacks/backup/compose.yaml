@@ -1,0 +1,27 @@
+services:
+    restic:
+        image: mazzolino/restic:1.8
+        container_name: restic
+        # Snapshots record the hostname, which is how you tell the two machines
+        # apart in one repository.
+        hostname: ${HOST_NAME:-homeserver}
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+            - RUN_ON_STARTUP=false
+            - BACKUP_CRON=${BACKUP_CRON}
+            - RESTIC_REPOSITORY=${BACKUP_REPOSITORY}
+            - RESTIC_PASSWORD=${BACKUP_PASSWORD}
+            - RESTIC_BACKUP_SOURCES=/data
+            # The store's own repository lives under the same directory on the
+            # host that keeps it; backing that up would copy the backups.
+            - RESTIC_BACKUP_ARGS=--exclude=/data/backup --exclude-caches --one-file-system
+            - RESTIC_FORGET_ARGS=${BACKUP_RETENTION}
+        volumes:
+            - ${BASE_DIR}:/data:ro
+        networks:
+            - homeserver
+
+networks:
+    homeserver:
+        external: true
