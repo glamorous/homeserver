@@ -32,10 +32,32 @@ day someone remembers to add it here.
 
 ## The repository password is the whole thing
 
-Lose it and the backups are unreadable — this is encryption, not a login you can
-reset. Keep a copy somewhere that does not depend on the machines being backed
-up. A password stored only in the thing you are protecting is not a backup of
-anything.
+Lose it and the backups are unreadable. This is encryption, not a login you can
+reset, and restic offers no unencrypted mode — so the only decision left to you
+is where the key lives.
+
+Encryption earns its place here regardless of where the disk sits. The snapshots
+contain the container platform's own database, and that holds every stack's
+environment: the admin passwords, the API tokens, the provider secrets. Add the
+identity provider's user table and the certificate manager's private keys and
+the repository stops being a pile of data and becomes the keys to everything, in
+one file, on a disk that will eventually leave the building — to a repair shop,
+a cupboard, or a bin.
+
+### Do not keep the key inside the backup
+
+The trap is quiet and it is easy to walk into: the natural place to put the key
+is with the other stack variables, and those live in a database that this very
+backup copies. Then the machine dies, you reach for the snapshots, and the
+password you need to open them is inside them.
+
+Keep it somewhere that is not part of what is being backed up. A password
+manager, or the operating system's own credential store **on a machine that
+this backup does not cover**. Do the same for the store's login, which is
+embedded in the repository URL.
+
+One copy on one laptop is better than the loop above and still a single point of
+failure. Treat this like any other key you cannot regenerate.
 
 ## Restoring
 
