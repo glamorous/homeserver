@@ -23,11 +23,35 @@ Confidentiality does not depend on any of this: restic encrypts before it
 sends, so the repository is unreadable without the password even to whoever
 holds the disk.
 
-## Do not point a client at this host's own directory
+## Put the repository on another disk
 
-The repository lives under `${BASE_DIR}` like everything else, so the client on
-this same machine must exclude it. Without that, every run copies the backups
-into the backups.
+`BACKUP_REPO_PATH` is deliberately not derived from `${BASE_DIR}`. A repository
+on the same disk as the data it protects survives a deleted file and a bad
+upgrade, but not the failure that actually loses everything at once. Point it at
+a second disk, and preferably one that is copied onward from there, so the chain
+does not end on this machine.
+
+If that path is on a removable volume, a run while it is unmounted fails rather
+than silently starting an empty repository — restic only creates one when told
+to `init`. The check below is what turns that failure into something you hear
+about.
+
+Wherever it ends up, the client on this same host must exclude it, or every run
+copies the backups into the backups.
+
+## Checking
+
+A repository can be verified, which is the one thing a folder of copied files
+cannot offer. `restic check` on its own confirms the structure; reading a slice
+of the pack files is what catches a disk corrupting data underneath you, so
+`RESTIC_CHECK_ARGS` asks for a percentage rather than metadata alone.
+
+The result goes to a push monitor on both outcomes. That is on purpose: a check
+that fails tells you something is wrong, and a check that stops running tells
+you nothing at all unless something is expecting to hear from it.
+
+Note that the scheduling variables in this image are mutually exclusive — one
+container runs one job — which is why the check is a separate service.
 
 ## Initialising
 

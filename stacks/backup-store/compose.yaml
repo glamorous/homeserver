@@ -7,9 +7,34 @@ services:
             - TZ=${TZ}
             - OPTIONS=${RESTIC_REST_OPTIONS}
         volumes:
-            - ${BASE_DIR}/backup/repo:/data
+            # Not tied to BASE_DIR: putting the repository on a different disk
+            # than the data it protects is what makes it survive that disk.
+            - ${BACKUP_REPO_PATH}:/data
         ports:
             - "${RESTIC_REST_PORT}:8000"
+        networks:
+            - homeserver
+
+    restic-check:
+        image: mazzolino/restic:1.8
+        container_name: restic-check
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+            - RUN_ON_STARTUP=false
+            # The scheduling variables are mutually exclusive, which is why the
+            # check is a service of its own rather than a second job here.
+            - CHECK_CRON=${BACKUP_CHECK_CRON}
+            - RESTIC_CHECK_ARGS=${BACKUP_CHECK_ARGS}
+            - RESTIC_REPOSITORY=${BACKUP_REPOSITORY}
+            - RESTIC_PASSWORD=${BACKUP_PASSWORD}
+            # A check that quietly stops running is as bad as one that fails,
+            # so the monitor hears about success too and raises the alarm when
+            # neither arrives within its window.
+            - POST_COMMANDS_SUCCESS=curl -fsS -m 10 -o /dev/null "${BACKUP_CHECK_PING}"
+            - POST_COMMANDS_FAILURE=curl -fsS -m 10 -o /dev/null "${BACKUP_CHECK_PING}?status=down&msg=repository%20check%20failed"
+        depends_on:
+            - restic-rest
         networks:
             - homeserver
 
