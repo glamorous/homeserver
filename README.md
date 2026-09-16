@@ -22,6 +22,7 @@ deploys the stacks it needs and ignores the rest.
 | `auth` | [authentik](https://goauthentik.io) | One account per person, shared across services |
 | `backup` | [restic](https://restic.net) | Snapshots this host's data into the shared repository |
 | `backup-store` | [rest-server](https://github.com/restic/rest-server) | Holds the repository the others write to |
+| `media` | [Radarr](https://radarr.video), [Sonarr](https://sonarr.tv), [Bazarr](https://www.bazarr.media), [Prowlarr](https://prowlarr.com), [Transmission](https://transmissionbt.com), [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr), [Seerr](https://seerr.dev), [Kometa](https://kometa.wiki) | Fetch, rename and subtitle films and series for a media server |
 
 ## Deployment roles
 
@@ -39,6 +40,7 @@ Not every host runs every stack. A typical two-host setup:
 | `auth` | yes | no |
 | `backup` | yes | yes |
 | `backup-store` | yes | no |
+| `media` | yes | no |
 
 Running `dns` and `monitoring` on both hosts is deliberate: two resolvers survive
 one host going down, and two monitoring instances can watch each other.
