@@ -15,6 +15,7 @@ touching any of that.
 | [FlareSolverr](https://github.com/FlareSolverr/FlareSolverr) | Answers the bot checks some indexers put in front of their search |
 | [Seerr](https://seerr.dev) | Requests from the household, signed in with their media server account |
 | [Kometa](https://kometa.wiki) | Collections in Plex |
+| curator | Stops looking for a better release once a film or episode has settled |
 
 Seerr is what Overseerr and Jellyseerr became; both older projects point here.
 
@@ -75,6 +76,25 @@ Order matters, because each step needs an API key from the one before.
    indexers that need it. An indexer without the tag ignores it
 6. **Seerr**: sign in with the media server account, then add Radarr and Sonarr
 7. **Kometa**: create `config.yml` below; the container waits until it exists
+
+## When to stop upgrading
+
+Radarr and Sonarr keep hunting for a better release forever: the only built-in
+stop is a quality and score you may never reach. So a film that exists online
+only as a 1080p rip is searched for every feed cycle, for years.
+
+The `curator` service closes that off. Once a day it unmonitors anything that
+has a file and has passed **both** windows: `CURATOR_DAYS_AFTER_ADD` since it
+landed in the library, and `CURATOR_DAYS_AFTER_RELEASE` since it came out. The
+later of the two wins, so something added the week it appears still gets its
+full release window, while an old film is left alone shortly after it lands.
+
+Unmonitoring stops searching, nothing else: the file stays, and you can still
+ask for a better one yourself through Interactive Search.
+
+It reads the API keys straight from the two config files, so it carries no
+secrets, and it is a loop with a sleep rather than a cron daemon — one fewer
+moving part to reason about.
 
 ### Moving versus copying
 

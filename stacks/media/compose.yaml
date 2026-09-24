@@ -153,6 +153,91 @@ services:
         networks:
             - homeserver
 
+    curator:
+        image: python:3.12-alpine
+        container_name: media-curator
+        restart: unless-stopped
+        environment:
+            - TZ=${TZ}
+            # Keep looking for a better release until both windows have passed;
+            # the later of the two wins.
+            - KEEP_DAYS_AFTER_ADD=${CURATOR_DAYS_AFTER_ADD}
+            - KEEP_DAYS_AFTER_RELEASE=${CURATOR_DAYS_AFTER_RELEASE}
+        # Reads the API keys where the other two already keep them, so this
+        # service needs no secrets of its own.
+        volumes:
+            - ${BASE_DIR}/radarr/config/config.xml:/keys/radarr.xml:ro
+            - ${BASE_DIR}/sonarr/config/config.xml:/keys/sonarr.xml:ro
+        command:
+            - sh
+            - -c
+            - |
+              cat > /curator.py <<'PY'
+              import datetime as dt, json, os, re, urllib.request
+
+              NOW = dt.datetime.now(dt.timezone.utc)
+              AFTER_ADD = dt.timedelta(days=int(os.environ["KEEP_DAYS_AFTER_ADD"]))
+              AFTER_RELEASE = dt.timedelta(days=int(os.environ["KEEP_DAYS_AFTER_RELEASE"]))
+
+              def key(path):
+                  return re.search(r"<ApiKey>(.+?)</ApiKey>", open(path).read()).group(1)
+
+              def api(base, api_key, path, method="GET", body=None):
+                  request = urllib.request.Request(
+                      base + path, method=method,
+                      data=json.dumps(body).encode() if body else None,
+                      headers={"X-Api-Key": api_key, "Content-Type": "application/json"})
+                  with urllib.request.urlopen(request, timeout=120) as response:
+                      raw = response.read()
+                  return json.loads(raw) if raw else None
+
+              def moment(value):
+                  return dt.datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
+
+              def done_looking(added, released):
+                  deadlines = [d for d in (added and added + AFTER_ADD,
+                                           released and released + AFTER_RELEASE) if d]
+                  return bool(deadlines) and NOW > max(deadlines)
+
+              radarr, radarr_key = "http://radarr:7878/api/v3", key("/keys/radarr.xml")
+              movies = [m for m in api(radarr, radarr_key, "/movie")
+                        if m["monitored"] and m.get("hasFile")
+                        and done_looking(moment(m.get("added")),
+                                         max([d for d in (moment(m.get("digitalRelease")),
+                                                          moment(m.get("physicalRelease")),
+                                                          moment(m.get("inCinemas"))) if d], default=None))]
+              if movies:
+                  api(radarr, radarr_key, "/movie/editor", "PUT",
+                      {"movieIds": [m["id"] for m in movies], "monitored": False})
+              print(f"films: {len(movies)} no longer monitored", flush=True)
+
+              sonarr, sonarr_key = "http://sonarr:8989/api/v3", key("/keys/sonarr.xml")
+              episodes = []
+              for series in api(sonarr, sonarr_key, "/series"):
+                  for episode in api(sonarr, sonarr_key,
+                                     f"/episode?seriesId={series['id']}&includeEpisodeFile=true"):
+                      if episode["monitored"] and episode.get("hasFile") and done_looking(
+                              moment((episode.get("episodeFile") or {}).get("dateAdded")),
+                              moment(episode.get("airDateUtc"))):
+                          episodes.append(episode["id"])
+              if episodes:
+                  api(sonarr, sonarr_key, "/episode/monitor", "PUT",
+                      {"episodeIds": episodes, "monitored": False})
+              print(f"episodes: {len(episodes)} no longer monitored", flush=True)
+              PY
+              while true; do
+                python3 /curator.py && sleep 86400 || sleep 900
+              done
+        # Waits for both to answer, otherwise the first run lands before they
+        # are up and the next one is a day away.
+        depends_on:
+            radarr:
+                condition: service_healthy
+            sonarr:
+                condition: service_healthy
+        networks:
+            - homeserver
+
     kometa:
         image: lscr.io/linuxserver/kometa:v2.4.8-ls117
         container_name: kometa
