@@ -116,6 +116,20 @@ for everything monitored that is missing or below its cutoff once a week, at
 `CURATOR_MISSING_SEARCH_HOUR`. More often than that is what gets an account
 banned from an indexer.
 
+### Sizes an indexer got wrong
+
+The size limits under Settings -> Quality are checked against the size the
+indexer reports, and some report a fraction of the real torrent: a 4 GB episode
+listed as 1 GB goes straight through. Only the client knows the real size, once
+the download starts. So every five minutes the curator compares each download
+in the queue with the limit for its quality and runtime, and removes,
+blocklists and searches again for whatever only got past the limit because of
+a wrong size. A release that was reported honestly as too big and picked by
+hand is left alone.
+
+Series are kept smaller per minute than films: 15 to 40 MB a minute at 1080p,
+against 20 to 55 in Radarr.
+
 It reads the API keys straight from the two config files, so it carries no
 secrets, and it is a loop with a sleep rather than a cron daemon — one fewer
 moving part to reason about.

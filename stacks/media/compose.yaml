@@ -176,7 +176,7 @@ services:
             - -c
             - |
               cat > /curator.py <<'PY'
-              import datetime as dt, json, os, re, urllib.request
+              import datetime as dt, json, os, re, sys, urllib.request
 
               NOW = dt.datetime.now(dt.timezone.utc)
               LOCAL = dt.datetime.now()
@@ -197,6 +197,47 @@ services:
 
               def moment(value):
                   return dt.datetime.fromisoformat(value.replace("Z", "+00:00")) if value else None
+
+              def oversized():
+                  # The size limit is checked against what the indexer reported,
+                  # and some report a fraction of the real torrent. The client
+                  # knows the real size once the download starts. What only got
+                  # past the limit that way is removed, blocklisted and searched
+                  # for again; a release picked by hand that was honestly too big
+                  # is left alone.
+                  for name, base in (("radarr", "http://radarr:7878/api/v3"),
+                                     ("sonarr", "http://sonarr:8989/api/v3")):
+                      api_key = key(f"/keys/{name}.xml")
+                      limits = {d["quality"]["id"]: d.get("maxSize")
+                                for d in api(base, api_key, "/qualitydefinition")}
+                      downloads = {}
+                      for record in api(base, api_key, "/queue?pageSize=1000&includeMovie=true"
+                                                       "&includeEpisode=true&includeSeries=true")["records"]:
+                          if record.get("downloadId"):
+                              downloads.setdefault(record["downloadId"], []).append(record)
+                      # A season pack is one download with a record per episode.
+                      for download, records in downloads.items():
+                          first = records[0]
+                          limit = limits.get(first["quality"]["quality"]["id"])
+                          minutes = sum((r.get("movie") or r.get("episode") or {}).get("runtime")
+                                        or (r.get("series") or {}).get("runtime") or 0 for r in records)
+                          if not (limit and minutes and first.get("size")):
+                              continue
+                          allowed = limit * minutes * 1024 * 1024
+                          if first["size"] <= allowed:
+                              continue
+                          grabs = api(base, api_key, f"/history?downloadId={download}&pageSize=50")["records"]
+                          reported = max((int(g["data"].get("size") or 0) for g in grabs
+                                          if g["eventType"] == "grabbed"), default=0)
+                          if not reported or reported > allowed:
+                              continue
+                          api(base, api_key, f"/queue/{first['id']}?removeFromClient=true&blocklist=true", "DELETE")
+                          print(f"{name}: {first['title']} is {first['size'] / 1e9:.1f} GB, reported as "
+                                f"{reported / 1e9:.1f} GB, limit {allowed / 1e9:.1f} GB; blocklisted", flush=True)
+
+              if sys.argv[1:] == ["queue"]:
+                  oversized()
+                  sys.exit()
 
               def done_looking(added, released):
                   deadlines = [d for d in (added and added + AFTER_ADD,
@@ -299,6 +340,12 @@ services:
               # Hourly and on the hour, so a file that is already good enough is
               # let go before the next feed cycle grabs an upgrade it does not
               # need, and the weekly search lands at the hour it was set for.
+              # The queue every five minutes, so an oversized download is caught
+              # while it has barely started.
+              ( while true; do
+                  python3 /curator.py queue
+                  sleep $$((300 - $$(date +%s) % 300))
+                done ) &
               while true; do
                 python3 /curator.py && sleep $$((3600 - $$(date +%s) % 3600)) || sleep 900
               done
