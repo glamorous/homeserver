@@ -108,6 +108,14 @@ Dolby release can still replace it within the window.
 Unmonitoring stops searching, nothing else: the file stays, and you can still
 ask for a better one yourself through Interactive Search.
 
+The other way round, nothing looks back: the feeds only carry what was just
+posted, so an episode from years ago that is still missing, or an older release
+better than the file at hand, is only found by a search. The curator runs one
+for everything monitored that is missing or below its cutoff once a week, at
+`CURATOR_MISSING_SEARCH_WEEKDAY` (ISO, 5 is Friday) and
+`CURATOR_MISSING_SEARCH_HOUR`. More often than that is what gets an account
+banned from an indexer.
+
 It reads the API keys straight from the two config files, so it carries no
 secrets, and it is a loop with a sleep rather than a cron daemon — one fewer
 moving part to reason about.

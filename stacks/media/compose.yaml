@@ -163,6 +163,9 @@ services:
             # the later of the two wins.
             - KEEP_DAYS_AFTER_ADD=${CURATOR_DAYS_AFTER_ADD}
             - KEEP_DAYS_AFTER_RELEASE=${CURATOR_DAYS_AFTER_RELEASE}
+            # When to look for everything still missing: ISO weekday, hour.
+            - MISSING_SEARCH_WEEKDAY=${CURATOR_MISSING_SEARCH_WEEKDAY}
+            - MISSING_SEARCH_HOUR=${CURATOR_MISSING_SEARCH_HOUR}
         # Reads the API keys where the other two already keep them, so this
         # service needs no secrets of its own.
         volumes:
@@ -176,6 +179,7 @@ services:
               import datetime as dt, json, os, re, urllib.request
 
               NOW = dt.datetime.now(dt.timezone.utc)
+              LOCAL = dt.datetime.now()
               AFTER_ADD = dt.timedelta(days=int(os.environ["KEEP_DAYS_AFTER_ADD"]))
               AFTER_RELEASE = dt.timedelta(days=int(os.environ["KEEP_DAYS_AFTER_RELEASE"]))
 
@@ -275,11 +279,28 @@ services:
                   api(sonarr, sonarr_key, "/episode/monitor", "PUT",
                       {"episodeIds": episodes, "monitored": False})
               print(f"episodes: {len(episodes)} no longer monitored, {early} of them on their file", flush=True)
+
+              # Feeds only carry what was just posted, so an old episode that is
+              # still missing, or an older release better than the file at hand,
+              # is never found unless someone searches for it. What is still
+              # monitored is small, because the curator lets go of the rest above.
+              # Once a week is enough, and keeps indexers from seeing it as
+              # hammering. Only the run at the top of the hour counts, so a
+              # retry after a failure cannot search twice.
+              if (LOCAL.isoweekday() == int(os.environ["MISSING_SEARCH_WEEKDAY"])
+                      and LOCAL.hour == int(os.environ["MISSING_SEARCH_HOUR"]) and LOCAL.minute < 10):
+                  for name in ("MissingMoviesSearch", "CutoffUnmetMoviesSearch"):
+                      api(radarr, radarr_key, "/command", "POST",
+                          {"name": name, "filterKey": "monitored", "filterValue": "true"})
+                  for name in ("MissingEpisodeSearch", "CutoffUnmetEpisodeSearch"):
+                      api(sonarr, sonarr_key, "/command", "POST", {"name": name, "monitored": True})
+                  print("weekly: searched for what is missing or below the cutoff", flush=True)
               PY
-              # Hourly, so a file that is already good enough is let go before
-              # the next feed cycle grabs an upgrade it does not need.
+              # Hourly and on the hour, so a file that is already good enough is
+              # let go before the next feed cycle grabs an upgrade it does not
+              # need, and the weekly search lands at the hour it was set for.
               while true; do
-                python3 /curator.py && sleep 3600 || sleep 900
+                python3 /curator.py && sleep $$((3600 - $$(date +%s) % 3600)) || sleep 900
               done
         # Waits for both to answer, otherwise the first run lands before they
         # are up and the next one is an hour away.
