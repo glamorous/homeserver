@@ -199,37 +199,90 @@ services:
                                            released and released + AFTER_RELEASE) if d]
                   return bool(deadlines) and NOW > max(deadlines)
 
+              # Audio the Apple TV passes to the soundbar as it is. AAC plays
+              # too, but a better release is worth waiting for until the window
+              # closes.
+              PASSTHROUGH = ("AC3", "EAC3")
+              LANGUAGE_CODES = {
+                  "English": {"eng", "en"}, "Dutch": {"nld", "dut", "nl"},
+                  "French": {"fre", "fra", "fr"}, "German": {"ger", "deu", "de"},
+                  "Spanish": {"spa", "es"}, "Norwegian": {"nor", "nob", "no"},
+                  "Danish": {"dan", "da"}, "Swedish": {"swe", "sv"},
+              }
+
+              def targets(base, api_key):
+                  # What a profile is really after is its cutoff: 4K asks for
+                  # Atmos, and only a profile that takes remuxes accepts TrueHD.
+                  aims = {}
+                  for profile in api(base, api_key, "/qualityprofile"):
+                      cutoff = next(item for item in profile["items"]
+                                    if (item.get("id") or item.get("quality", {}).get("id")) == profile["cutoff"])
+                      names = [q["quality"]["name"] for q in cutoff.get("items") or [cutoff]]
+                      aims[profile["id"]] = {"uhd": any("2160p" in n for n in names),
+                                             "remux": any("Remux" in n for n in names)}
+                  return aims
+
+              def settled(info, original, aim):
+                  # Judged on what ffprobe found in the file, not on what the
+                  # release name claimed.
+                  if not info:
+                      return False
+                  width = int((info.get("resolution") or "0x0").split("x")[0] or 0)
+                  codec = info.get("audioCodec") or ""
+                  heard = {l for l in (info.get("audioLanguages") or "").split("/") if l and l != "und"}
+                  expected = LANGUAGE_CODES.get((original or {}).get("name"))
+                  if heard and expected and not heard & expected:
+                      return False
+                  if aim["uhd"]:
+                      return (width >= 3500 and info.get("videoDynamicRange") == "HDR"
+                              and codec.endswith("Atmos") and (aim["remux"] or codec.startswith("EAC3")))
+                  return width >= 1800 and (info.get("audioChannels") or 0) >= 5.1 and codec.split(" ")[0] in PASSTHROUGH
+
               radarr, radarr_key = "http://radarr:7878/api/v3", key("/keys/radarr.xml")
-              movies = [m for m in api(radarr, radarr_key, "/movie")
-                        if m["monitored"] and m.get("hasFile")
-                        and done_looking(moment(m.get("added")),
-                                         max([d for d in (moment(m.get("digitalRelease")),
-                                                          moment(m.get("physicalRelease")),
-                                                          moment(m.get("inCinemas"))) if d], default=None))]
+              aims = targets(radarr, radarr_key)
+              movies, early = [], 0
+              for m in api(radarr, radarr_key, "/movie"):
+                  if not (m["monitored"] and m.get("hasFile")):
+                      continue
+                  if settled((m.get("movieFile") or {}).get("mediaInfo"), m.get("originalLanguage"), aims[m["qualityProfileId"]]):
+                      early += 1
+                  elif not done_looking(moment(m.get("added")),
+                                        max([d for d in (moment(m.get("digitalRelease")),
+                                                         moment(m.get("physicalRelease")),
+                                                         moment(m.get("inCinemas"))) if d], default=None)):
+                      continue
+                  movies.append(m["id"])
               if movies:
                   api(radarr, radarr_key, "/movie/editor", "PUT",
-                      {"movieIds": [m["id"] for m in movies], "monitored": False})
-              print(f"films: {len(movies)} no longer monitored", flush=True)
+                      {"movieIds": movies, "monitored": False})
+              print(f"films: {len(movies)} no longer monitored, {early} of them on their file", flush=True)
 
               sonarr, sonarr_key = "http://sonarr:8989/api/v3", key("/keys/sonarr.xml")
-              episodes = []
+              aims = targets(sonarr, sonarr_key)
+              episodes, early = [], 0
               for series in api(sonarr, sonarr_key, "/series"):
                   for episode in api(sonarr, sonarr_key,
                                      f"/episode?seriesId={series['id']}&includeEpisodeFile=true"):
-                      if episode["monitored"] and episode.get("hasFile") and done_looking(
-                              moment((episode.get("episodeFile") or {}).get("dateAdded")),
-                              moment(episode.get("airDateUtc"))):
-                          episodes.append(episode["id"])
+                      if not (episode["monitored"] and episode.get("hasFile")):
+                          continue
+                      file = episode.get("episodeFile") or {}
+                      if settled(file.get("mediaInfo"), series.get("originalLanguage"), aims[series["qualityProfileId"]]):
+                          early += 1
+                      elif not done_looking(moment(file.get("dateAdded")), moment(episode.get("airDateUtc"))):
+                          continue
+                      episodes.append(episode["id"])
               if episodes:
                   api(sonarr, sonarr_key, "/episode/monitor", "PUT",
                       {"episodeIds": episodes, "monitored": False})
-              print(f"episodes: {len(episodes)} no longer monitored", flush=True)
+              print(f"episodes: {len(episodes)} no longer monitored, {early} of them on their file", flush=True)
               PY
+              # Hourly, so a file that is already good enough is let go before
+              # the next feed cycle grabs an upgrade it does not need.
               while true; do
-                python3 /curator.py && sleep 86400 || sleep 900
+                python3 /curator.py && sleep 3600 || sleep 900
               done
         # Waits for both to answer, otherwise the first run lands before they
-        # are up and the next one is a day away.
+        # are up and the next one is an hour away.
         depends_on:
             radarr:
                 condition: service_healthy

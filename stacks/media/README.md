@@ -83,11 +83,27 @@ Radarr and Sonarr keep hunting for a better release forever: the only built-in
 stop is a quality and score you may never reach. So a film that exists online
 only as a 1080p rip is searched for every feed cycle, for years.
 
-The `curator` service closes that off. Once a day it unmonitors anything that
+The `curator` service closes that off. Every hour it unmonitors anything that
 has a file and has passed **both** windows: `CURATOR_DAYS_AFTER_ADD` since it
 landed in the library, and `CURATOR_DAYS_AFTER_RELEASE` since it came out. The
 later of the two wins, so something added the week it appears still gets its
 full release window, while an old film is left alone shortly after it lands.
+
+A file that already is what its profile is after is let go at once, without
+waiting for either window. That is judged on what ffprobe found in the file,
+because custom formats only ever see the release name, and names lie in both
+directions: a "5.1 BluRay" can hold stereo Opus, and a plain "BluRay x264" can
+hold perfectly good 5.1. What counts as done follows the profile's cutoff:
+
+| Cutoff | Done when the file has |
+|---|---|
+| 1080p | at least 1080p, 5.1 or more, AC3 or EAC3 |
+| 4K | 2160p in HDR or Dolby Vision, and EAC3 Atmos |
+| 4K with remuxes | 2160p in HDR or Dolby Vision, and Atmos in any codec |
+
+In every case the audio has to be in the original language when the file says
+which language it is. AAC 5.1 plays fine but does not count as done, so a
+Dolby release can still replace it within the window.
 
 Unmonitoring stops searching, nothing else: the file stays, and you can still
 ask for a better one yourself through Interactive Search.
