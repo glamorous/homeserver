@@ -70,6 +70,23 @@ services:
         networks:
             - homeserver
 
+    image-prune:
+        image: docker:29-cli
+        container_name: image-prune
+        restart: unless-stopped
+        # Daily at 02:00 UTC: the image carries no time zone data, so TZ would
+        # be ignored.
+        entrypoint: ["sh", "-c"]
+        command:
+            - |
+              while true; do
+                now=$$(date +'%H %M %S' | awk '{print $$1*3600+$$2*60+$$3}')
+                sleep $$(( (2*3600 - now + 86400) % 86400 + 1 ))
+                docker image prune --all --force
+              done
+        volumes:
+            - /var/run/docker.sock:/var/run/docker.sock
+
 networks:
     homeserver:
         external: true

@@ -44,6 +44,18 @@ Every notification ends with the container's hostname, which by default is the
 container id — a random string that changes whenever the container is
 recreated. Set `HOST_NAME` per host so the message names the machine instead.
 
+## Unused images
+
+Every update leaves the previous image behind, and nothing removes it: over a
+few months that grew to 30 GB on one host. `image-prune` removes every image no
+container uses, daily at 02:00 UTC, so it also catches updates that land
+between Diun's weekly checks.
+
+It keeps no older versions around for a rollback. A `--filter until=` looks
+like it would, but it compares against the date an image was built, not the
+day it was pulled, so it spares almost nothing. Where a rollback matters the
+tag is pinned instead, and going back means pulling the previous tag again.
+
 ## Health checks
 
 Not every service has one, and that is deliberate. Uptime Kuma, Pi-hole,
