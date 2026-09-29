@@ -4,8 +4,10 @@ auth
 [authentik](https://goauthentik.io) as the single place where accounts live, so
 a household has one password instead of one per service.
 
-Four containers: the server, a worker, PostgreSQL and Redis. Budget around a
-gigabyte of memory. Everything persists under `${BASE_DIR}/authentik`.
+Three containers: the server, a worker and PostgreSQL. authentik keeps its
+cache and task queue in PostgreSQL nowadays, so it no longer needs Redis.
+Budget around a gigabyte of memory. Everything persists under
+`${BASE_DIR}/authentik`.
 
 ## First run
 
