@@ -386,11 +386,14 @@ services:
     # exits — it has no built-in scheduler, and a config change arrives as a new
     # commit anyway, so a run-once container is exactly right. Do NOT give it a
     # restart policy or a Kuma monitor: it is meant to be Exited (0).
-    # The config is ./configarr/config.yml, pulled in as a compose config below.
-    # A plain bind mount would be empty here (Portainer clones the repo inside
-    # its own container), but a configs: file: is read by compose itself, so a
-    # separate file in the repo works. Scores it does not list are left untouched
-    # (reset_unmatched_scores off), so the apps' audio/video formats stay put.
+    # The config is configarr/config.yml next to this file, pulled in as a
+    # compose config below. A plain bind mount would be empty here (Portainer
+    # clones the repo inside its own container). A configs: file: does work, but
+    # its path is resolved against the compose PROJECT directory, and Portainer
+    # sets that to the repo root (/data/compose/<id>), not this stack's folder —
+    # so the path below is repo-root-relative, not relative to this file.
+    # Scores it does not list are left untouched (reset_unmatched_scores off),
+    # so the apps' audio/video formats stay put.
     configarr:
         image: ghcr.io/raydak-labs/configarr:1.38.0
         container_name: configarr
@@ -418,7 +421,9 @@ services:
 
 configs:
     configarr_config:
-        file: ./configarr/config.yml
+        # Repo-root-relative: Portainer runs compose with the project directory
+        # at the clone root, so ./configarr/config.yml would not be found.
+        file: ./stacks/media/configarr/config.yml
 
 networks:
     homeserver:

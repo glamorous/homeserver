@@ -179,7 +179,10 @@ quality logic is reproducible and survives a reinstall. The config is a separate
 file, `configarr/config.yml`, pulled in through a compose `configs:` block with
 `file:`. A plain bind mount would be empty under Portainer (it clones the repo
 inside its own container), but a `configs: file:` is read by compose itself, so
-a file in the repo works.
+a file in the repo works. One catch: Portainer runs compose with the project
+directory at the repo root, not this stack's folder, and `configs: file:` paths
+resolve against the project directory — so the path is written repo-root-relative
+(`./stacks/media/configarr/config.yml`), not relative to the compose file.
 
 **It runs once per deploy and exits** — Configarr has no scheduler, and a change
 reaches it as a new commit anyway. So `restart: "no"`, and it is `Exited (0)` the
