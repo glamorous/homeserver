@@ -16,6 +16,7 @@ touching any of that.
 | [Seerr](https://seerr.dev) | Requests from the household, signed in with their media server account |
 | [Kometa](https://kometa.wiki) | Collections in Plex |
 | curator | Stops looking for a better release once a film or episode has settled |
+| [Configarr](https://configarr.de) | Keeps Radarr/Sonarr custom formats and their scores in this repo |
 
 Seerr is what Overseerr and Jellyseerr became; both older projects point here.
 
@@ -169,3 +170,50 @@ this address would only work with verification switched off.
 
 Overlays rewrite the posters in Plex itself. Leave them out until you want
 that; `remove_overlays: true` on a library undoes them.
+
+## Custom formats as code (Configarr)
+
+Radarr and Sonarr score each release with custom formats, but those live in
+their databases, not here. Configarr writes them from a config instead, so the
+quality logic is reproducible and survives a reinstall. The config is a separate
+file, `configarr/config.yml`, pulled in through a compose `configs:` block with
+`file:`. A plain bind mount would be empty under Portainer (it clones the repo
+inside its own container), but a `configs: file:` is read by compose itself, so
+a file in the repo works.
+
+**It runs once per deploy and exits** — Configarr has no scheduler, and a change
+reaches it as a new commit anyway. So `restart: "no"`, and it is `Exited (0)` the
+rest of the time. Do not add a Kuma monitor for it, or it will read as down.
+Editing `configarr/config.yml` and pushing recreates the container on the next
+poll, which re-runs the sync; for a sync without a config change, redeploy.
+
+**Two Portainer stack variables** hold the API keys (never in the repo):
+`RADARR_API_KEY` and `SONARR_API_KEY`, from each app's Settings -> General. The
+config reads them with `!env`.
+
+Only the three language formats are managed here; `reset_unmatched_scores` is
+off, so every other score (Atmos, Dolby *, Surround, Lossless, Stereo, 2160p,
+Dolby Vision, HDR10, Season Pack) keeps whatever the apps already have.
+
+| Format | Score | Why |
+|---|---|---|
+| `Dutch/Flemish Audio` | **+600** | A release whose audio includes Dutch or Flemish wins, even over Atmos — so an animated film gets its Flemish/Dutch version. Only fires when the release name says NL/Vlaams; an opaque `MULTi` with no language tag does not count. |
+| `MULTi` | **−1** | A multi-language release lands one point under an otherwise equal single-language one, so the plain version wins a tie. |
+| `Andere taal dan origineel` | **−2000** | Already existed at −1000; raised so that a release without the original language stays below the floor and is rejected even if it is a Dutch/Flemish Atmos file. This is what makes a pure NL/Vlaams dub (no original audio) unwanted. |
+
+`min_format_score` stays **0** (unchanged) and is deliberately not managed here:
+Configarr only sets a profile's floor when it also manages that profile's
+qualities, which we do not hand it, so it would be ignored anyway. At 0 the
+`MULTi` −1 is a tiebreaker for every release with a recognised audio tag (those
+score positive); only a `MULTi` release with no audio tag at all drops to −1 and
+is rejected — an accepted, rare loss. Everything meant to be rejected (Stereo
+−10000, non-original −2000) sits far below 0.
+
+Dutch is language id 7, Flemish 19, and `Original` is the pseudo-language −2
+that Radarr fills from TMDb — verified against the live instance, not guessed.
+
+**Verified by dry run** (`DRY_RUN=true`): Configarr matches the existing `Andere
+taal dan origineel` by name (no duplicate, only its score changes) and touches
+no other score. A profile shows a benign `filtered because no qualities
+provided` warning — that is exactly why qualities and the score floor stay as
+the apps have them.

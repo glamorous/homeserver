@@ -381,6 +381,45 @@ services:
         networks:
             - homeserver
 
+    # Keeps Radarr and Sonarr's custom formats and their per-profile scores in
+    # this repo instead of only in their databases. Runs once per (re)deploy and
+    # exits — it has no built-in scheduler, and a config change arrives as a new
+    # commit anyway, so a run-once container is exactly right. Do NOT give it a
+    # restart policy or a Kuma monitor: it is meant to be Exited (0).
+    # The config is ./configarr/config.yml, pulled in as a compose config below.
+    # A plain bind mount would be empty here (Portainer clones the repo inside
+    # its own container), but a configs: file: is read by compose itself, so a
+    # separate file in the repo works. Scores it does not list are left untouched
+    # (reset_unmatched_scores off), so the apps' audio/video formats stay put.
+    configarr:
+        image: ghcr.io/raydak-labs/configarr:1.38.0
+        container_name: configarr
+        restart: "no"
+        environment:
+            - TZ=${TZ}
+            # Added as Portainer stack variables, not in the repo. Values are the
+            # API keys from radarr/sonarr Settings -> General.
+            - RADARR_API_KEY=${RADARR_API_KEY}
+            - SONARR_API_KEY=${SONARR_API_KEY}
+        volumes:
+            # Cache for the TRaSH repo it clones at start. Under BASE_DIR so the
+            # bind mount works (unlike a repo-relative path under Portainer).
+            - ${BASE_DIR}/configarr/repos:/app/repos
+        configs:
+            - source: configarr_config
+              target: /app/config/config.yml
+        depends_on:
+            radarr:
+                condition: service_healthy
+            sonarr:
+                condition: service_healthy
+        networks:
+            - homeserver
+
+configs:
+    configarr_config:
+        file: ./configarr/config.yml
+
 networks:
     homeserver:
         external: true
