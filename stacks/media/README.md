@@ -175,14 +175,14 @@ that; `remove_overlays: true` on a library undoes them.
 
 Radarr and Sonarr score each release with custom formats, but those live in
 their databases, not here. Configarr writes them from a config instead, so the
-quality logic is reproducible and survives a reinstall. The config is a separate
-file, `configarr/config.yml`, pulled in through a compose `configs:` block with
-`file:`. A plain bind mount would be empty under Portainer (it clones the repo
-inside its own container), but a `configs: file:` is read by compose itself, so
-a file in the repo works. One catch: Portainer runs compose with the project
-directory at the repo root, not this stack's folder, and `configs: file:` paths
-resolve against the project directory — so the path is written repo-root-relative
-(`./stacks/media/configarr/config.yml`), not relative to the compose file.
+quality logic is reproducible and survives a reinstall. The config lives inline
+in an `configs: content:` block at the bottom of `compose.yaml`. It has to be
+inline, not a separate file: Portainer clones the repo inside its own container,
+and any `configs: file:` (like a bind mount) makes the Docker daemon look for
+that path in its own filesystem, where the clone does not exist — the deploy
+then fails with `bind source path does not exist`. `configs: content:` carries
+the bytes in the compose file and needs no mount, the same reason curator inlines
+its script. Edit the block, commit, redeploy.
 
 **It runs once per deploy and exits** — Configarr has no scheduler, and a change
 reaches it as a new commit anyway. So `restart: "no"`, and it is `Exited (0)` the
